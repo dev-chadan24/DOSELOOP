@@ -1,0 +1,11 @@
+- [x] **Repository Security**: Verify `.gitignore` and build artifacts
+- [x] **Environment / JWT**: Enforce `JWT_SECRET` min length and required status, add `CORS_ORIGIN`
+- [x] **CORS**: Configure `app.ts` to use explicit origin and block unknown
+- [x] **Error Handling**: Sanitize `error.middleware.ts` (remove stack trace, remove url from logs)
+- [x] **Health Endpoint**: Fix `health.routes.ts` Prisma reuse and payload
+- [x] **Authorization**: Fix `family.service.ts` ownership check on `acceptInvitation`
+- [x] **Mass Assignment**: Whitelist fields in `settings.service.ts` `updatePreferences`
+- [x] **Pagination limits**: Enforce limits in `medications.service.ts`, `emergency.service.ts`, `notifications.service.ts`
+- [x] **Export Endpoint**: Filter returned fields in `settings.service.ts` `exportData`
+- [x] **Verification**: Run TypeScript compiler and verify project builds
+- [x] **Final Report**: Generate the markdown report
