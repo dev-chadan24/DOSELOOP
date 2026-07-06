@@ -22,11 +22,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/v1/cron/reminders",
-      "schedule": "* * * * *"
-    }
   ]
 }
