@@ -8,6 +8,7 @@ import tailwindcss from '@tailwindcss/vite';
 // TanStack Router still provides file-based routing via its Vite plugin.
 // The output goes to dist/ which @vercel/static-build picks up automatically.
 export default defineConfig({
+  envDir: '../',
   plugins: [
     TanStackRouterVite({ autoCodeSplitting: true }),
     react(),
