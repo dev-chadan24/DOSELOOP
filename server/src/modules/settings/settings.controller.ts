@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as settingsService from './settings.service';
-import { sendSuccess } from '@/utils/response';
-import { logAuditEvent } from '@/modules/audit/audit.service';
+import { sendSuccess } from '../../utils/response';
+import { logAuditEvent } from '../../modules/audit/audit.service';
 
 import { User } from '@supabase/supabase-js';
 

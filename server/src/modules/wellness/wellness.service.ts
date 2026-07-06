@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { WellnessTone } from '@prisma/client';
 
 export const getWellnessHistory = async (

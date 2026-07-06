@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as feedbackService from './feedback.service';
-import { sendSuccess } from '@/utils/response';
+import { sendSuccess } from '../../utils/response';
 
 import { User } from '@supabase/supabase-js';
 

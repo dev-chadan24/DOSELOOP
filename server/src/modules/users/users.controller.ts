@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '@supabase/supabase-js';
 import { getUserProfile, updateUserProfile } from './users.service';
-import { logAuditEvent } from '@/modules/audit/audit.service';
+import { logAuditEvent } from '../../modules/audit/audit.service';
 
 export const getProfile = async (req: Request, res: Response) => {
   try {

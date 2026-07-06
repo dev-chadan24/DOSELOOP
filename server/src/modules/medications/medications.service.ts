@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { DoseStatus, MedicationForm, Medication, DoseEvent, Prisma } from '@prisma/client';
 
 export const createMedication = async (

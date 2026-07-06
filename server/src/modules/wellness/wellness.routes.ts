@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getHistory, logMetric, logWaterIntake } from './wellness.controller';
-import { validate } from '@/middlewares/validate.middleware';
+import { validate } from '../../middlewares/validate.middleware';
 import { logWellnessSchema, logWaterSchema } from './wellness.schema';
 import { requireAuth } from '../auth/auth.middleware';
 

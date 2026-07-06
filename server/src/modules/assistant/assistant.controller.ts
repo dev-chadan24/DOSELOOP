@@ -8,7 +8,7 @@
 
 import { Request, Response } from 'express';
 import type { User } from '@supabase/supabase-js';
-import { sendSuccess, sendError } from '@/utils/response';
+import { sendSuccess, sendError } from '../../utils/response';
 import * as assistantService from './assistant.service';
 
 /** Convenience type for authenticated Express requests. */

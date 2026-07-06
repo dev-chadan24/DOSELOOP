@@ -7,10 +7,10 @@ import {
   acceptInvitation,
   updateRole,
 } from './family.controller';
-import { validate } from '@/middlewares/validate.middleware';
+import { validate } from '../../middlewares/validate.middleware';
 import { z } from 'zod';
 import { inviteFamilyMemberSchema, updatePermissionsSchema } from './family.schema';
-import { uuidParamSchema } from '@/middlewares/common.schema';
+import { uuidParamSchema } from '../../middlewares/common.schema';
 import { requireAuth } from '../auth/auth.middleware';
 
 const router = Router();

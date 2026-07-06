@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { EmergencyContact } from '@prisma/client';
 
 export const getContacts = async (userId: string, page: number, limit: number) => {

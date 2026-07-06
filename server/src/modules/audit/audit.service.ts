@@ -1,6 +1,6 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { Prisma } from '@prisma/client';
-import { logger } from '@/config/logger';
+import { logger } from '../../config/logger';
 
 /**
  * Structured payload for a security-sensitive audit event.

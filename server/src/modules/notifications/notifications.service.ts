@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { Notification, NotificationType } from '@prisma/client';
 
 export const getNotifications = async (userId: string, page: number, limit: number) => {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { logger } from '@/config/logger';
-import { sendError } from '@/utils/response';
+import { logger } from '../config/logger';
+import { sendError } from '../utils/response';
 
 export interface AppError extends Error {
   statusCode?: number;

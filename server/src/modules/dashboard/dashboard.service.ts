@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '../../lib/prisma';
 import { DoseStatus, DoseEvent, WaterLog } from '@prisma/client';
 
 export const getSummary = async (userId: string) => {

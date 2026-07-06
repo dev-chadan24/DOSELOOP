@@ -1,4 +1,4 @@
-import { logger } from '@/config/logger';
+import { logger } from '../../config/logger';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 

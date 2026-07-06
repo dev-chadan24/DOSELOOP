@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { processReminders } from '@/modules/notifications/reminder.engine';
-import { logger } from '@/config/logger';
+import { processReminders } from '../modules/notifications/reminder.engine';
+import { logger } from '../config/logger';
 
 const router = Router();
 

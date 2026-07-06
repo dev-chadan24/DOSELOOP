@@ -13,9 +13,9 @@
 //  • Rate-limiting preparation: retryAfterMs is parsed from Retry-After headers.
 // ---------------------------------------------------------------------------
 
-import { prisma } from '@/lib/prisma';
-import { env } from '@/config/env';
-import { logger } from '@/config/logger';
+import { prisma } from '../../lib/prisma';
+import { env } from '../../config/env';
+import { logger } from '../../config/logger';
 import type {
   GroqMessage,
   GroqChatCompletionRequest,

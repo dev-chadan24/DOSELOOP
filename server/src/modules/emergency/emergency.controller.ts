@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { User } from '@supabase/supabase-js';
 import * as emergencyService from './emergency.service';
-import { sendSuccess } from '@/utils/response';
-import { logAuditEvent } from '@/modules/audit/audit.service';
+import { sendSuccess } from '../../utils/response';
+import { logAuditEvent } from '../../modules/audit/audit.service';
 
 export const getEmergencyContacts = async (req: Request, res: Response) => {
   try {

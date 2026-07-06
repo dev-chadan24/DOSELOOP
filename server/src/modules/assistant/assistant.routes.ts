@@ -12,7 +12,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { requireAuth } from '../auth/auth.middleware';
-import { validate } from '@/middlewares/validate.middleware';
+import { validate } from '../../middlewares/validate.middleware';
 import { chat, getHistory, newConversation, deleteHistory } from './assistant.controller';
 
 const router = Router();

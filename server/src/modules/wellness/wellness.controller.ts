@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as wellnessService from './wellness.service';
-import { sendSuccess } from '@/utils/response';
+import { sendSuccess } from '../../utils/response';
 
 import { User } from '@supabase/supabase-js';
 

@@ -7,9 +7,9 @@ import {
   updateDoseStatus,
   deleteMedication,
 } from './medications.controller';
-import { validate } from '@/middlewares/validate.middleware';
+import { validate } from '../../middlewares/validate.middleware';
 import { createMedicationSchema, updateDoseStatusSchema } from './medications.schema';
-import { paginationSchema, uuidParamSchema } from '@/middlewares/common.schema';
+import { paginationSchema, uuidParamSchema } from '../../middlewares/common.schema';
 
 const router = Router();
 

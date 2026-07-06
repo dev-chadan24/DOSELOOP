@@ -6,9 +6,9 @@ import {
   deleteEmergencyContact,
   triggerSOS,
 } from './emergency.controller';
-import { validate } from '@/middlewares/validate.middleware';
+import { validate } from '../../middlewares/validate.middleware';
 import { createEmergencyContactSchema, triggerSOSSchema } from './emergency.schema';
-import { paginationSchema, uuidParamSchema } from '@/middlewares/common.schema';
+import { paginationSchema, uuidParamSchema } from '../../middlewares/common.schema';
 
 const router = Router();
 

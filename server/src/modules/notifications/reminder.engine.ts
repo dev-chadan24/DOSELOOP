@@ -1,6 +1,6 @@
 import cron from 'node-cron';
-import { prisma } from '@/lib/prisma';
-import { logger } from '@/config/logger';
+import { prisma } from '../../lib/prisma';
+import { logger } from '../../config/logger';
 import { DoseStatus, NotificationType, DoseEvent, Medication, User } from '@prisma/client';
 import { sendEmail } from './email.service';
 

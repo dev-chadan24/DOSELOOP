@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { prisma } from '@/lib/prisma';
-import { sendSuccess } from '@/utils/response';
+import { prisma } from '../lib/prisma';
+import { sendSuccess } from '../utils/response';
 
 const router = Router();
 
