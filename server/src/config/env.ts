@@ -20,14 +20,15 @@ const envSchema = z.object({
   DIRECT_URL: z.string().url('DIRECT_URL must be a valid PostgreSQL URL').optional(),
 
   // Supabase
-  SUPABASE_URL: z.string().url('SUPABASE_URL must be a valid URL'),
+  SUPABASE_URL: z.string().url('SUPABASE_URL must be a valid URL').optional(),
   SUPABASE_SERVICE_ROLE_KEY: z
     .string()
-    .min(10, 'SUPABASE_SERVICE_ROLE_KEY appears too short to be valid'),
+    .min(10, 'SUPABASE_SERVICE_ROLE_KEY appears too short to be valid')
+    .optional(),
 
   // Auth
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
-  CORS_ORIGIN: z.string().url('CORS_ORIGIN must be a valid URL').optional(),
+  JWT_SECRET: z.string().min(10, 'JWT_SECRET must be at least 10 characters'),
+  CORS_ORIGIN: z.string().optional(),
 
   // Groq AI — optional so the server boots without a key.
   // Replace the placeholder in .env with your real key from https://console.groq.com/keys

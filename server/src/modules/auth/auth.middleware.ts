@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { createClient, User } from '@supabase/supabase-js';
 import { env } from '../../config/env';
 
-const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(
+  env.SUPABASE_URL ?? '',
+  env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+);
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {

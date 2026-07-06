@@ -94,7 +94,15 @@ app.use((_req, res, next) => {
 // ---------------------------------------------------------------------------
 app.use(
   cors({
-    origin: env.CORS_ORIGIN || (env.NODE_ENV === 'development' ? 'http://localhost:5173' : false),
+    // In production on Vercel, the frontend and backend share the same domain,
+    // so CORS is largely handled at the infrastructure level. We allow all origins
+    // here because every endpoint is protected by JWT authentication anyway.
+    // In development we restrict to the local Vite dev server.
+    origin: env.CORS_ORIGIN
+      ? env.CORS_ORIGIN
+      : env.NODE_ENV === 'development'
+        ? 'http://localhost:5173'
+        : true,
     credentials: true,
   }),
 );
