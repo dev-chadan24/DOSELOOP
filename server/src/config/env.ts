@@ -44,6 +44,9 @@ const envSchema = z.object({
   // Resend (email)
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email('RESEND_FROM_EMAIL must be a valid email address').default('emergency@doseloop.com'),
+
+  // Vercel Cron
+  CRON_SECRET: z.string().optional(),
 });
 
 // ---------------------------------------------------------------------------

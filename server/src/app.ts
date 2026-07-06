@@ -20,11 +20,11 @@ import wellnessRoutes from '@/modules/wellness/wellness.routes';
 import feedbackRoutes from '@/modules/feedback/feedback.routes';
 import settingsRoutes from '@/modules/settings/settings.routes';
 import assistantRoutes from '@/modules/assistant/assistant.routes';
+import cronRoutes from '@/routes/cron.routes';
 import { startReminderEngine } from '@/modules/notifications/reminder.engine';
-
 const app = express();
 
-startReminderEngine();
+// startReminderEngine(); // Disabled for Vercel Serverless. Will be triggered via API Cron.
 
 // ---------------------------------------------------------------------------
 // Request ID — must be first so every downstream layer has access
@@ -142,6 +142,7 @@ app.use('/api/v1/wellness', wellnessRoutes);
 app.use('/api/v1/feedback', feedbackRoutes);
 app.use('/api/v1/settings', settingsRoutes);
 app.use('/api/v1/ai', assistantRoutes);
+app.use('/api/v1/cron', cronRoutes);
 
 // ---------------------------------------------------------------------------
 // Fallback handlers

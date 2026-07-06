@@ -88,6 +88,7 @@ dist
 build
 .output
 .nitro
+.vercel
 
 # DB
 *.sqlite

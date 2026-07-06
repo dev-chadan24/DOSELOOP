@@ -121,26 +121,30 @@ npm run dev
 ```
 The client will start at `http://localhost:5173`.
 
-## Production Deployment
+## Production Deployment (Vercel Serverless)
 
-### Building
+DoseLoop is configured to deploy seamlessly as a full-stack Serverless application on Vercel. 
 
-**Server:**
-```bash
-cd server
-npm install
-npx prisma generate
-npm run build
-```
+Both the React frontend and the Express backend run on Vercel under a single domain.
 
-**Client:**
-```bash
-cd client
-npm install
-npm run build
-```
+### Steps to Deploy on Vercel
 
-The resulting assets in `server/dist` and `client/dist` (or `.output` depending on your hosting provider adapter) can be deployed to Node.js hosts (e.g., Render, Railway) and static hosts (e.g., Vercel, Netlify) respectively. Make sure to set the production environment variables securely in your hosting dashboard.
+1. **Push to GitHub**: Push your complete `DOSELOOP` repository to a new GitHub repo.
+2. **Import Project**: Log in to Vercel, click **Add New Project**, and import your GitHub repository.
+3. **Framework Preset**: Vercel will auto-detect the configuration using `vercel.json`. Leave it as `Other`.
+4. **Root Directory**: Leave as `./` (Root).
+5. **Environment Variables**: Add ALL variables from both `server/.env` and `client/.env`.
+   - Set `VITE_API_URL` to `/api/v1`
+   - Ensure you generate a secure `CRON_SECRET`
+6. **Deploy**: Click Deploy. Vercel will simultaneously build the Vite frontend and deploy the Express backend as Serverless Functions.
+
+### Background Reminders (Cron)
+
+Since the backend runs as serverless functions, long-running processes like `node-cron` cannot run continuously.
+To enable medication reminders:
+1. Go to your Vercel Project Settings.
+2. Ensure you have added a `vercel.json` crons block (or configure it in the dashboard) to ping `/api/v1/cron/reminders` every minute.
+3. Vercel will send a `Bearer` token matching your `CRON_SECRET` to execute the reminders safely.
 
 ## Folder Structure
 
