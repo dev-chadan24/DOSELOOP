@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+Disallow: /dashboard
+Disallow: /medications
+Disallow: /wellness
+Disallow: /circle
+Disallow: /assistant
+Disallow: /analytics
+Disallow: /notifications
+Disallow: /profile
+Disallow: /settings
+Disallow: /emergency

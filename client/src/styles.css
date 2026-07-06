@@ -1,0 +1,454 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * DoseLoop Design System — v2 "Quiet Premium"
+ * Visual contract derived from PRODUCT.md principles, elevated toward the
+ * craftsmanship of Apple Health, Linear, Notion and Arc:
+ *  - "Peace of mind is the product" -> calm, balanced, low-arousal palette
+ *  - "Calm over clever" -> generous whitespace, layered depth, restrained motion
+ *  - Accessibility-first (Grace, 71) -> high contrast, large tap targets, legible type
+ *
+ * Palette intent (original to DoseLoop, no pink/purple/AI aesthetics):
+ *  - Background: warm balanced paper (not clinical white)
+ *  - Primary: deep desaturated pine-teal (trust, clinical calm, longevity)
+ *  - Accent: refined warm brass/sand (human warmth without sweetness)
+ *  - Status: muted sage (on-track), amber (attention), clay (missed) — never alarmist
+ */
+
+@theme inline {
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-numeric: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
+  --radius-3xl: calc(var(--radius) + 18px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --color-lavender: var(--lavender);
+  --color-lavender-foreground: var(--lavender-foreground);
+
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Layered, neutral-tinted shadow scale for tasteful depth */
+  --shadow-xs: 0 1px 2px oklch(0.28 0.03 200 / 0.05);
+  --shadow-soft: 0 1px 2px oklch(0.28 0.03 200 / 0.04), 0 6px 18px oklch(0.28 0.03 200 / 0.06);
+  --shadow-lift: 0 2px 6px oklch(0.28 0.03 200 / 0.05), 0 16px 40px oklch(0.28 0.03 200 / 0.1);
+  --shadow-float: 0 4px 12px oklch(0.28 0.03 200 / 0.06), 0 28px 60px oklch(0.28 0.03 200 / 0.14);
+  --shadow-glow: 0 0 0 1px oklch(0.475 0.072 192 / 0.08), 0 12px 32px oklch(0.475 0.072 192 / 0.16);
+
+  /* Soft-neumorphism surfaces — restrained, light + dark tuned via tokens */
+  --neumorph-light: oklch(1 0 0 / 0.9);
+  --neumorph-dark: oklch(0.28 0.03 220 / 0.12);
+}
+
+:root {
+  --radius: 1rem;
+  color-scheme: light;
+
+  /* Light Theme — Warm Ivory / Emerald / Lavender / Gold (per DESIGN spec) */
+  --background: #faf8f5; /* Warm Ivory */
+  --foreground: #1f2937; /* Charcoal */
+
+  --card: #ffffff; /* Pure White */
+  --card-foreground: #1f2937;
+
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
+
+  --primary: #0f766e; /* Deep Emerald */
+  --primary-foreground: #ffffff;
+
+  --secondary: #84a98c; /* Sage Green */
+  --secondary-foreground: #14302a;
+
+  --muted: #f3f1ec; /* Soft Pearl */
+  --muted-foreground: #6b7280; /* Slate */
+
+  --accent: #b8a8e3; /* Soft Lavender */
+  --accent-foreground: #2e2350;
+
+  --destructive: #c0492f;
+  --destructive-foreground: #ffffff;
+
+  --success: #0f766e;
+  --success-foreground: #ffffff;
+
+  --warning: #d4a373; /* Warm Gold highlight */
+  --warning-foreground: #4a2f12;
+
+  --info: #84a98c;
+  --info-foreground: #14302a;
+
+  --lavender: #b8a8e3;
+  --lavender-foreground: #2e2350;
+
+  --gold: #d4a373;
+  --gold-foreground: #4a2f12;
+
+  --border: #e5e7eb; /* Mist Grey */
+  --input: #e5e7eb;
+  --ring: #0f766e;
+
+  --chart-1: #0f766e;
+  --chart-2: #84a98c;
+  --chart-3: #d4a373;
+  --chart-4: #b8a8e3;
+  --chart-5: #6b7280;
+
+  --sidebar: #f3f1ec;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #0f766e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ece9e1;
+  --sidebar-accent-foreground: #1f2937;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #0f766e;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Dark Theme — Rich Graphite / Emerald / Lavender / Gold (per DESIGN spec) */
+  --background: #111827; /* Rich Graphite */
+  --foreground: #f8fafc; /* Soft White */
+
+  --card: #273444; /* Charcoal */
+  --card-foreground: #f8fafc;
+
+  --popover: #273444;
+  --popover-foreground: #f8fafc;
+
+  --primary: #34d399; /* Emerald */
+  --primary-foreground: #06231a;
+
+  --secondary: #a3be8c; /* Sage */
+  --secondary-foreground: #16210f;
+
+  --muted: #1f2937; /* Deep Slate */
+  --muted-foreground: #cbd5e1; /* Cool Grey */
+
+  --accent: #c4b5fd; /* Lavender */
+  --accent-foreground: #1e1640;
+
+  --destructive: #f87171;
+  --destructive-foreground: #220606;
+
+  --success: #34d399;
+  --success-foreground: #06231a;
+
+  --warning: #e9c46a; /* Gold */
+  --warning-foreground: #2e2208;
+
+  --info: #a3be8c;
+  --info-foreground: #16210f;
+
+  --lavender: #c4b5fd;
+  --lavender-foreground: #1e1640;
+
+  --gold: #e9c46a;
+  --gold-foreground: #2e2208;
+
+  --border: #374151; /* Dark Grey */
+  --input: #374151;
+  --ring: #34d399;
+
+  --chart-1: #34d399;
+  --chart-2: #a3be8c;
+  --chart-3: #e9c46a;
+  --chart-4: #c4b5fd;
+  --chart-5: #cbd5e1;
+
+  --sidebar: #1f2937;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #34d399;
+  --sidebar-primary-foreground: #06231a;
+  --sidebar-accent: #273444;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #374151;
+  --sidebar-ring: #34d399;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.018em;
+    line-height: 1.1;
+  }
+
+  h1 {
+    letter-spacing: -0.028em;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-primary) 22%, transparent);
+    color: var(--color-foreground);
+  }
+}
+
+/* Tasteful, contextual glass — used only where it improves usability (bars, overlays) */
+@utility glass {
+  background-color: color-mix(in oklab, var(--color-background) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+  border-color: color-mix(in oklab, var(--color-border) 70%, transparent);
+}
+
+@utility glass-card {
+  background-color: color-mix(in oklab, var(--color-card) 80%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+}
+
+/* Premium depth helpers */
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+@utility shadow-lift {
+  box-shadow: var(--shadow-lift);
+}
+@utility shadow-float {
+  box-shadow: var(--shadow-float);
+}
+@utility shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Restrained soft-neumorphism — for quick actions, FABs, toggles, key widgets.
+   Uses a top inner light + layered outer shadow so it stays elegant in both themes. */
+@utility neumorph {
+  background-image: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--color-card) 100%, white 5%),
+    color-mix(in oklab, var(--color-card) 100%, black 4%)
+  );
+  box-shadow:
+    inset 0 1px 0 var(--neumorph-light),
+    var(--shadow-soft);
+}
+
+@utility neumorph-pressed {
+  box-shadow:
+    inset 0 2px 6px var(--neumorph-dark),
+    inset 0 -1px 0 var(--neumorph-light);
+}
+
+/* Subtle radial wash for hero / feature surfaces */
+@utility surface-glow {
+  background-image:
+    radial-gradient(
+      60% 50% at 15% 0%,
+      color-mix(in oklab, var(--color-primary) 8%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      50% 45% at 100% 10%,
+      color-mix(in oklab, var(--color-accent) 12%, transparent),
+      transparent 70%
+    );
+}
+
+/* Calm-over-clever motion: subtle, fast, never bouncy. Respects reduced motion. */
+@utility animate-rise {
+  animation: doseloop-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-rise-slow {
+  animation: doseloop-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-fade {
+  animation: doseloop-fade 0.45s ease-out both;
+}
+
+/* Staggered entrance for lists/grids: add data-stagger index inline if desired */
+@utility stagger-children {
+  & > * {
+    animation: doseloop-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  & > *:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  & > *:nth-child(3) {
+    animation-delay: 0.12s;
+  }
+  & > *:nth-child(4) {
+    animation-delay: 0.18s;
+  }
+  & > *:nth-child(5) {
+    animation-delay: 0.24s;
+  }
+  & > *:nth-child(6) {
+    animation-delay: 0.3s;
+  }
+}
+
+/* Premium hover lift for interactive cards */
+@utility card-interactive {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+@keyframes doseloop-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes doseloop-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Scroll-reveal: elements marked [data-reveal] fade + rise as they enter view.
+   Re-armed on route change by the ScrollReveal hook for smooth feature switching. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+/* Optional stagger via data-reveal-delay on the element */
+[data-reveal][data-reveal-delay="1"] {
+  transition-delay: 0.06s;
+}
+[data-reveal][data-reveal-delay="2"] {
+  transition-delay: 0.12s;
+}
+[data-reveal][data-reveal-delay="3"] {
+  transition-delay: 0.18s;
+}
+[data-reveal][data-reveal-delay="4"] {
+  transition-delay: 0.24s;
+}
+[data-reveal][data-reveal-delay="5"] {
+  transition-delay: 0.3s;
+}
+
+/* Smooth, Apple-like tap feedback on interactive controls */
+@layer base {
+  button:not(:disabled),
+  a[href],
+  [role="button"],
+  [role="tab"] {
+    transition:
+      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.25s ease,
+      color 0.25s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease,
+      opacity 0.25s ease;
+  }
+  button:not(:disabled):active,
+  a[href]:active,
+  [role="button"]:active,
+  [role="tab"]:active {
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
