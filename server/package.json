@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "prisma generate",
+    "vercel-build": "npx prisma generate",
     "dev": "tsx watch src/server.ts",
     "build": "tsc && tsc-alias",
     "lint": "eslint src",

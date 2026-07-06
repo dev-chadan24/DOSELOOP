@@ -4,14 +4,11 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  HeadContent,
-  Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 
-import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { ThemeProvider, themeInitScript } from "../components/theme/ThemeProvider";
+import { ThemeProvider } from "../components/theme/ThemeProvider";
 import { ScrollReveal } from "../hooks/use-scroll-reveal";
 import { AuthProvider } from "../AuthProvider";
 
@@ -76,60 +73,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DoseLoop — Calm family health, together" },
-      {
-        name: "description",
-        content:
-          "DoseLoop is an AI-powered family health companion for medications, wellness, and peace of mind.",
-      },
-      { name: "author", content: "DoseLoop" },
-      { property: "og:title", content: "DoseLoop — Calm family health, together" },
-      {
-        property: "og:description",
-        content:
-          "An AI-powered family health companion for medications, wellness, and peace of mind.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@DoseLoop" },
-    ],
-    links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap",
-      },
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-function RootShell({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -139,7 +86,7 @@ function RootComponent() {
       <AuthProvider>
         <ThemeProvider>
           <ScrollReveal />
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          {/* Required: nested routes render here */}
           <Outlet />
         </ThemeProvider>
       </AuthProvider>

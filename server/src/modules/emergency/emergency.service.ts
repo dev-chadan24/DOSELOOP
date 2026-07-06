@@ -96,7 +96,7 @@ export const triggerSOS = async (
   let emailsSent = 0;
   let emailsFailed = 0;
 
-  const { env } = await import('@/config/env');
+  const { env } = await import('../../config/env');
   const fromEmail = env.RESEND_FROM_EMAIL;
   
   if (env.RESEND_API_KEY && contacts.length > 0) {
