@@ -20,8 +20,7 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 substitutions:
-  # ⚠️  CHANGE THIS to your new GCP project ID after creating the project
-  _PROJECT_ID: "YOUR_NEW_GCP_PROJECT_ID"
+  _PROJECT_ID: "doseloop-prod"
   _REGION: "us-central1"
   _ARTIFACT_REPO: "doseloop"
 
