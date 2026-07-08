@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
+import { API_BASE } from "@/lib/api";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -53,19 +54,7 @@ function Auth() {
   const [lastName, setLastName] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const syncUserWithBackend = async (session: Session) => {
-    try {
-      await fetch("/api/v1/auth/sync", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-      });
-    } catch (error) {
-      console.error("Failed to sync user with backend:", error);
-    }
-  };
+  // Session synchronization with backend is handled globally by AuthProvider.
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +84,7 @@ function Auth() {
       if (error) {
         setErrorMsg(error.message);
       } else if (data.session) {
-        await syncUserWithBackend(data.session);
+        // Sync is now automatically handled by AuthProvider's onAuthStateChange
         navigate({ to: "/dashboard" });
       } else if (isSignUp) {
         setErrorMsg("Please check your email to confirm registration.");

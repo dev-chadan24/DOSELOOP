@@ -26,16 +26,14 @@
 
 substitutions:
   _PROJECT_ID: "doseloop-prod-501816"
-  _REGION: "us-central1"
-  _ARTIFACT_REPO: "doseloop"
-
-  # Derived image paths in Artifact Registry
-  _SERVER_IMAGE: "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_ARTIFACT_REPO}/doseloop-server"
-  _CLIENT_IMAGE: "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_ARTIFACT_REPO}/doseloop-client"
+  _REGION: "asia-south1"
+  # Image paths in Artifact Registry
+  _SERVER_IMAGE: "asia-south1-docker.pkg.dev/doseloop-prod-501816/doseloop/doseloop-server"
+  _CLIENT_IMAGE: "asia-south1-docker.pkg.dev/doseloop-prod-501816/doseloop/doseloop-client"
 
   # Cloud Run URL of the server service — used by Vite as VITE_API_URL at build time.
   # On first deploy: leave as placeholder, then update after server is live.
-  _SERVER_CLOUD_RUN_URL: "https://doseloop-server-m4wtbsnmdq-uc.a.run.app"
+  _SERVER_CLOUD_RUN_URL: "https://doseloop-server-905018717108.asia-south1.run.app"
 
   # Supabase public URL (not a secret — safe to commit)
   _VITE_SUPABASE_URL: "https://hvduagntoflynubyaqxs.supabase.co"
@@ -45,7 +43,7 @@ substitutions:
   _VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2ZHVhZ250b2ZseW51YnlhcXhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4OTk0MTgsImV4cCI6MjA5ODQ3NTQxOH0.jMPTfGx2j1g-GzHcDM9iv_qx65Ko2OA9gylB382VKV4"
 
 options:
-  logging: CLOUD_LOGGING_ONLY
+  logging: LEGACY
   machineType: "E2_HIGHCPU_8"
 
 steps:
@@ -54,7 +52,7 @@ steps:
     id: "build-server"
     args:
       - build
-      - "--tag=${_SERVER_IMAGE}:$SHORT_SHA"
+      - "--tag=${_SERVER_IMAGE}:$BUILD_ID"
       - "--tag=${_SERVER_IMAGE}:latest"
       - "--cache-from=${_SERVER_IMAGE}:latest"
       - "--file=server/Dockerfile"
@@ -66,7 +64,7 @@ steps:
     id: "build-client"
     args:
       - build
-      - "--tag=${_CLIENT_IMAGE}:$SHORT_SHA"
+      - "--tag=${_CLIENT_IMAGE}:$BUILD_ID"
       - "--tag=${_CLIENT_IMAGE}:latest"
       - "--cache-from=${_CLIENT_IMAGE}:latest"
       - "--file=client/Dockerfile"
@@ -100,7 +98,7 @@ steps:
       - |
         apk add --no-cache openssl &&
         cd server &&
-        npm ci --ignore-scripts &&
+        npm install --ignore-scripts &&
         npx prisma generate &&
         npx prisma migrate deploy
     secretEnv: ["DATABASE_URL", "DIRECT_URL"]
@@ -114,7 +112,7 @@ steps:
       - run
       - deploy
       - "doseloop-server"
-      - "--image=${_SERVER_IMAGE}:$SHORT_SHA"
+      - "--image=${_SERVER_IMAGE}:$BUILD_ID"
       - "--region=${_REGION}"
       - "--platform=managed"
       - "--allow-unauthenticated"
@@ -126,7 +124,7 @@ steps:
       - "--concurrency=80"
       - "--timeout=300"
       # Non-secret env vars injected as plain env config
-      - "--set-env-vars=NODE_ENV=production,PORT=5000,RESEND_FROM_EMAIL=emergency@doseloop.com"
+      - "--set-env-vars=NODE_ENV=production,RESEND_FROM_EMAIL=emergency@doseloop.com"
       # 🔒 Secrets mounted from Google Secret Manager
       # Format: ENV_VAR_NAME=secret-name:version
       - "--set-secrets=DATABASE_URL=doseloop-database-url:latest,DIRECT_URL=doseloop-direct-url:latest,SUPABASE_URL=doseloop-supabase-url:latest,SUPABASE_SERVICE_ROLE_KEY=doseloop-supabase-service-role-key:latest,JWT_SECRET=doseloop-jwt-secret:latest,GROQ_API_KEY=doseloop-groq-api-key:latest,RESEND_API_KEY=doseloop-resend-api-key:latest,CORS_ORIGIN=doseloop-cors-origin:latest,CRON_SECRET=doseloop-cron-secret:latest"
@@ -141,7 +139,7 @@ steps:
       - run
       - deploy
       - "doseloop-client"
-      - "--image=${_CLIENT_IMAGE}:$SHORT_SHA"
+      - "--image=${_CLIENT_IMAGE}:$BUILD_ID"
       - "--region=${_REGION}"
       - "--platform=managed"
       - "--allow-unauthenticated"
@@ -164,7 +162,7 @@ availableSecrets:
       env: "DIRECT_URL"
 
 images:
-  - "${_SERVER_IMAGE}:$SHORT_SHA"
+  - "${_SERVER_IMAGE}:$BUILD_ID"
   - "${_SERVER_IMAGE}:latest"
-  - "${_CLIENT_IMAGE}:$SHORT_SHA"
+  - "${_CLIENT_IMAGE}:$BUILD_ID"
   - "${_CLIENT_IMAGE}:latest"

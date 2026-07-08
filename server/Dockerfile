@@ -10,13 +10,13 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 # Copy manifests first for optimal layer caching
-# npm ci requires package-lock.json to exist
-COPY package.json package-lock.json ./
+# (no package-lock.json — use npm install)
+COPY package.json ./
 
 # Install ALL deps (incl. devDependencies needed for tsc/tsc-alias build)
 # --ignore-scripts: prevents postinstall from running prisma generate here
 # (we run it explicitly below with the schema present)
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts
 
 # Copy Prisma schema first so prisma generate can run
 COPY prisma ./prisma
@@ -48,8 +48,8 @@ RUN addgroup --system --gid 1001 nodejs \
  && adduser  --system --uid 1001 --ingroup nodejs --no-create-home nodeuser
 
 # Copy package manifests and install PRODUCTION dependencies only
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts
+COPY package.json ./
+RUN npm install --omit=dev --ignore-scripts
 
 # Copy compiled output from builder stage
 COPY --from=builder /app/dist ./dist

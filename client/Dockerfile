@@ -7,11 +7,12 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copy manifests first for optimal layer caching
-# npm ci requires package-lock.json to exist and produces reproducible installs
-COPY package.json package-lock.json ./
+# (project uses bun locally — no package-lock.json exists)
+COPY package.json ./
 
 # Install all dependencies (dev included — needed for Vite build)
-RUN npm ci
+# Note: project uses bun locally, so we use npm install (not npm ci)
+RUN npm install
 
 # Accept the backend API URL as a build-time argument.
 # In production this will be the Cloud Run URL of doseloop-server.

@@ -24,6 +24,13 @@ import cronRoutes from './routes/cron.routes';
 import { startReminderEngine } from './modules/notifications/reminder.engine';
 const app = express();
 
+// ---------------------------------------------------------------------------
+// Trust Proxy — required for Cloud Run (sits behind Google's load balancer).
+// Without this, express-rate-limit cannot read X-Forwarded-For headers
+// and will throw ERR_ERL_UNEXPECTED_X_FORWARDED_FOR errors.
+// ---------------------------------------------------------------------------
+app.set('trust proxy', 1);
+
 // startReminderEngine(); // Disabled for Vercel Serverless. Will be triggered via API Cron.
 
 // ---------------------------------------------------------------------------
