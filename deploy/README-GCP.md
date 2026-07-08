@@ -1,239 +1,265 @@
-# DoseLoop — Google Cloud Deployment Guide
+# DoseLoop — GCP Production Deployment Runbook
+**Version:** 1.0 | **Updated:** 2026-07-08
 
-This guide walks you through deploying the DoseLoop monorepo to **Google Cloud Run** using **Cloud Build** and **Artifact Registry**.
-
----
-
-## Architecture
-
-```
-Internet
-   │
-   ├── /api/** ──► Cloud Run: doseloop-server  (Express API — port 5000)
-   │
-   └── /**  ────► Cloud Run: doseloop-client  (Nginx SPA — port 80)
-```
-
-Both services are deployed to the same GCP region and talk to the externally hosted **Supabase** database. No database container is needed.
+This document is the complete step-by-step guide to deploying DoseLoop to Google Cloud Run for the first time and for subsequent deployments.
 
 ---
 
-## Prerequisites
+## 1. Prerequisites
 
-| Tool | Version | Install |
-|------|---------|---------|
-| `gcloud` CLI | Latest | https://cloud.google.com/sdk/docs/install |
-| Docker Desktop | Latest | https://docs.docker.com/get-docker/ |
-| GCP Account | — | https://console.cloud.google.com |
-
----
-
-## Step 1 — GCP Project Setup
-
+### 1.1 GCP Project Setup
 ```bash
-# Log in
-gcloud auth login
+# Set your project ID
+export PROJECT_ID="doseloop-prod"
+export REGION="us-central1"
 
-# Create a new project (or use an existing one)
-gcloud projects create doseloop-prod --name="DoseLoop Production"
-
-# Set as default project
-gcloud config set project doseloop-prod
-
-# Enable billing (required) — do this in the GCP Console:
-# https://console.cloud.google.com/billing
+# Set default project
+gcloud config set project $PROJECT_ID
+gcloud config set run/region $REGION
 
 # Enable required APIs
 gcloud services enable \
-  artifactregistry.googleapis.com \
-  cloudbuild.googleapis.com \
   run.googleapis.com \
-  secretmanager.googleapis.com
+  cloudbuild.googleapis.com \
+  artifactregistry.googleapis.com \
+  secretmanager.googleapis.com \
+  cloudscheduler.googleapis.com
 ```
 
----
-
-## Step 2 — Artifact Registry
-
-Create a Docker repository to store the images:
-
+### 1.2 Artifact Registry Repository
 ```bash
 gcloud artifacts repositories create doseloop \
   --repository-format=docker \
-  --location=us-central1 \
-  --description="DoseLoop Docker images"
-
-# Authenticate Docker to push to Artifact Registry
-gcloud auth configure-docker us-central1-docker.pkg.dev
+  --location=$REGION \
+  --description="DoseLoop container images"
 ```
 
----
-
-## Step 3 — Store Secrets in Secret Manager
-
-Never bake secrets into Docker images. Store them in Secret Manager:
-
+### 1.3 Service Account for Cloud Build
 ```bash
-# DATABASE_URL
-echo -n "postgresql://postgres:PASSWORD@db.xxx.supabase.co:5432/postgres?sslmode=require" \
-  | gcloud secrets create doseloop-database-url --data-file=-
-
-# SUPABASE_SERVICE_ROLE_KEY
-echo -n "your-service-role-key" \
-  | gcloud secrets create doseloop-supabase-service-role-key --data-file=-
-
-# JWT_SECRET
-echo -n "your-jwt-secret" \
-  | gcloud secrets create doseloop-jwt-secret --data-file=-
-
-# GROQ_API_KEY
-echo -n "your-groq-api-key" \
-  | gcloud secrets create doseloop-groq-api-key --data-file=-
-
-# RESEND_API_KEY
-echo -n "your-resend-api-key" \
-  | gcloud secrets create doseloop-resend-api-key --data-file=-
-
-# RESEND_FROM_EMAIL
-echo -n "emergency@doseloop.com" \
-  | gcloud secrets create doseloop-resend-from-email --data-file=-
-```
-
----
-
-## Step 4 — Grant Cloud Build Permissions
-
-```bash
-# Get the Cloud Build service account email
-PROJECT_NUMBER=$(gcloud projects describe doseloop-prod --format="value(projectNumber)")
-CB_SA="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
+# Get the Cloud Build SA email
+export CB_SA="$(gcloud projects describe $PROJECT_ID \
+  --format='value(projectNumber)')@cloudbuild.gserviceaccount.com"
 
 # Grant required roles
-gcloud projects add-iam-policy-binding doseloop-prod \
+gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CB_SA}" \
   --role="roles/run.admin"
 
-gcloud projects add-iam-policy-binding doseloop-prod \
+gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CB_SA}" \
   --role="roles/iam.serviceAccountUser"
 
-gcloud projects add-iam-policy-binding doseloop-prod \
-  --member="serviceAccount:${CB_SA}" \
-  --role="roles/artifactregistry.writer"
-
-gcloud projects add-iam-policy-binding doseloop-prod \
+gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CB_SA}" \
   --role="roles/secretmanager.secretAccessor"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${CB_SA}" \
+  --role="roles/artifactregistry.writer"
 ```
 
 ---
 
-## Step 5 — First Deployment (two-phase)
+## 2. Rotate All Compromised Secrets
 
-Because the client needs the server's Cloud Run URL at **build time** (Vite env var), do the server first:
+> ⚠️ **CRITICAL:** All secrets in the committed `.env` file must be rotated BEFORE deploying.
 
-### 5a — Deploy the Server
+### 2.1 Supabase
+1. Go to Supabase Dashboard → Settings → API
+2. Click "Regenerate" on the **service_role** key
+3. Update the new key in Secret Manager (see Step 3)
 
+### 2.2 JWT Secret
 ```bash
-gcloud builds submit \
-  --config deploy/cloudbuild.yaml \
-  --substitutions \
-    _PROJECT_ID=doseloop-prod,\
-    _REGION=us-central1,\
-    _SERVER_CLOUD_RUN_URL=https://placeholder.a.run.app,\
-    _VITE_SUPABASE_ANON_KEY=your-anon-key
+# Generate a new cryptographically strong secret
+openssl rand -hex 32
+# Copy the output — you'll use it in Step 3
 ```
 
-After this step completes, get the server's URL:
+### 2.3 Groq API Key
+1. Go to https://console.groq.com/keys
+2. Revoke the current key, create a new one
+
+### 2.4 Resend API Key
+1. Go to https://resend.com/api-keys
+2. Revoke the current key, create a new one
+
+---
+
+## 3. Create Secrets in Google Secret Manager
 
 ```bash
-gcloud run services describe doseloop-server \
-  --region=us-central1 \
-  --format="value(status.url)"
-# → https://doseloop-server-XXXXXXXX-uc.a.run.app
-```
+# DATABASE_URL — Supabase Transaction Pooler (port 6543)
+# Format: postgresql://postgres.REF:PASS@aws-0-REGION.pooler.supabase.com:6543/postgres?sslmode=require&connection_limit=5
+echo -n "YOUR_POOLED_DATABASE_URL" | \
+  gcloud secrets create doseloop-database-url --data-file=-
 
-**Enable secrets on the server service** (uncomment the `--set-secrets` block in `cloudbuild.yaml` and redeploy, or set via Console):
+# DIRECT_URL — Supabase direct (non-pooled, for migrations)
+echo -n "YOUR_DIRECT_DATABASE_URL" | \
+  gcloud secrets create doseloop-direct-url --data-file=-
 
-```bash
-gcloud run services update doseloop-server \
-  --region=us-central1 \
-  --set-secrets="DATABASE_URL=doseloop-database-url:latest,SUPABASE_SERVICE_ROLE_KEY=doseloop-supabase-service-role-key:latest,JWT_SECRET=doseloop-jwt-secret:latest,GROQ_API_KEY=doseloop-groq-api-key:latest,RESEND_API_KEY=doseloop-resend-api-key:latest,RESEND_FROM_EMAIL=doseloop-resend-from-email:latest"
-```
+# SUPABASE_URL
+echo -n "https://YOUR_PROJECT_REF.supabase.co" | \
+  gcloud secrets create doseloop-supabase-url --data-file=-
 
-### 5b — Deploy the Client (with real server URL)
+# SUPABASE_SERVICE_ROLE_KEY (rotated in Step 2.1)
+echo -n "YOUR_NEW_SERVICE_ROLE_KEY" | \
+  gcloud secrets create doseloop-supabase-service-role-key --data-file=-
 
-```bash
-gcloud builds submit \
-  --config deploy/cloudbuild.yaml \
-  --substitutions \
-    _PROJECT_ID=doseloop-prod,\
-    _REGION=us-central1,\
-    _SERVER_CLOUD_RUN_URL=https://doseloop-server-XXXXXXXX-uc.a.run.app,\
-    _VITE_SUPABASE_ANON_KEY=your-anon-key
-```
+# JWT_SECRET (generated in Step 2.2)
+echo -n "YOUR_NEW_JWT_SECRET_HEX_32" | \
+  gcloud secrets create doseloop-jwt-secret --data-file=-
 
-Get the client URL:
+# GROQ_API_KEY (rotated in Step 2.3)
+echo -n "gsk_YOUR_NEW_KEY" | \
+  gcloud secrets create doseloop-groq-api-key --data-file=-
 
-```bash
-gcloud run services describe doseloop-client \
-  --region=us-central1 \
-  --format="value(status.url)"
-# → https://doseloop-client-XXXXXXXX-uc.a.run.app
+# RESEND_API_KEY (rotated in Step 2.4)
+echo -n "re_YOUR_NEW_KEY" | \
+  gcloud secrets create doseloop-resend-api-key --data-file=-
+
+# CORS_ORIGIN — set after first client deploy (see Step 6)
+echo -n "https://doseloop-client-PLACEHOLDER.a.run.app" | \
+  gcloud secrets create doseloop-cors-origin --data-file=-
+
+# CRON_SECRET — for Cloud Scheduler → /api/v1/cron/reminders
+openssl rand -hex 32 | \
+  gcloud secrets create doseloop-cron-secret --data-file=-
 ```
 
 ---
 
-## Step 6 — Set Up Cloud Build Trigger (CI/CD)
+## 4. Configure Supabase Dashboard (Manual Steps)
 
-Automate future deployments on every push to `main`:
+These cannot be automated — they must be done manually in the Supabase dashboard.
 
+### 4.1 Auth Redirect URLs
+Go to Supabase Dashboard → Authentication → URL Configuration:
+- **Site URL:** `https://doseloop-client-XXXX.a.run.app`
+- **Additional redirect URLs:** Add the Cloud Run client URL
+
+### 4.2 Row Level Security (RLS)
+**CRITICAL:** Verify RLS is enabled on all tables containing patient data.
+
+Go to Supabase Dashboard → Database → Tables, and for each table verify RLS is enabled:
+- `Medication`, `WellnessMetric`, `ClinicalNote`, `EmergencyContact`
+- `FamilyMember`, `Notification`, `AuditLog`, and ALL other PHI tables
+
+If RLS is disabled on any PHI table, **enable it immediately** and configure appropriate policies before any production traffic.
+
+### 4.3 Storage Bucket Policies
+Go to Supabase Dashboard → Storage:
+- Ensure no bucket is set to "Public" unless contents are explicitly public
+- Review bucket policies to ensure they require authentication
+
+---
+
+## 5. First-Time Deploy
+
+### 5.1 Deploy Server First (to get its URL for Vite build arg)
 ```bash
-gcloud builds triggers create github \
-  --repo-name=DOOSELOOP \
-  --repo-owner=YOUR_GITHUB_USERNAME \
-  --branch-pattern="^main$" \
-  --build-config=deploy/cloudbuild.yaml \
-  --substitutions \
-    _PROJECT_ID=doseloop-prod,\
-    _REGION=us-central1,\
-    _SERVER_CLOUD_RUN_URL=https://doseloop-server-XXXXXXXX-uc.a.run.app,\
-    _VITE_SUPABASE_ANON_KEY=your-anon-key
+# Deploy server placeholder to reserve the Cloud Run URL
+gcloud run deploy doseloop-server \
+  --image=gcr.io/cloudrun/placeholder \
+  --region=$REGION \
+  --platform=managed \
+  --allow-unauthenticated \
+  --port=5000 \
+  --project=$PROJECT_ID
+
+# Get the server URL
+export SERVER_URL=$(gcloud run services describe doseloop-server \
+  --region=$REGION --format='value(status.url)')
+echo "Server URL: $SERVER_URL"
+```
+
+### 5.2 Update Cloud Build Trigger Substitutions
+In the Cloud Build trigger, set:
+- `_SERVER_CLOUD_RUN_URL` = URL from Step 5.1
+- `_VITE_SUPABASE_ANON_KEY` = your Supabase anon key (mark as SECRET in trigger UI)
+
+### 5.3 Update CORS_ORIGIN Secret After Client Deploy
+After running the full pipeline and getting the client URL:
+```bash
+export CLIENT_URL="https://doseloop-client-XXXX.a.run.app"
+
+# Update the CORS_ORIGIN secret
+echo -n "$CLIENT_URL" | \
+  gcloud secrets versions add doseloop-cors-origin --data-file=-
 ```
 
 ---
 
-## Local Docker Testing (before deploying)
-
-Test the full stack locally with Docker Compose:
+## 6. Connect Cloud Scheduler for Reminder Engine
 
 ```bash
-# From the repo root
-docker-compose up --build
+export CRON_SECRET=$(gcloud secrets versions access latest \
+  --secret=doseloop-cron-secret)
 
-# Client → http://localhost:80
-# Server → http://localhost:5000
-# Health → http://localhost:5000/api/v1/health
+gcloud scheduler jobs create http doseloop-reminders \
+  --location=$REGION \
+  --schedule="*/15 * * * *" \
+  --uri="${SERVER_URL}/api/v1/cron/reminders" \
+  --http-method=POST \
+  --headers="Authorization=Bearer ${CRON_SECRET},Content-Type=application/json" \
+  --message-body='{}' \
+  --time-zone="UTC"
 ```
 
 ---
 
-## Cost Estimate (Cloud Run — minimal usage)
+## 7. Verify Deployment
 
-| Service | Memory | CPU | Min instances | Est. monthly cost |
-|---------|--------|-----|---------------|-------------------|
-| doseloop-server | 512 Mi | 1 | 0 | ~$0–5 |
-| doseloop-client | 256 Mi | 1 | 0 | ~$0–3 |
+```bash
+# Check server health
+curl "${SERVER_URL}/api/v1/health"
+curl "${SERVER_URL}/api/v1/health/ready"
 
-With `min-instances=0` Cloud Run scales to zero when idle — **free tier** covers most hobby/dev traffic.
+# Check server logs in Cloud Logging
+gcloud logging read \
+  "resource.type=cloud_run_revision AND resource.labels.service_name=doseloop-server" \
+  --limit=20 --format=json
+```
 
 ---
 
-## Troubleshooting
+## 8. GCP Architecture Summary
 
-| Issue | Fix |
-|-------|-----|
-| `PRISMA_GENERATE` fails in Docker | Ensure `prisma/schema.prisma` is copied before `npm install` |
-| Client shows blank page | Check `VITE_API_URL` build arg — must point to server Cloud Run URL |
-| API 500 errors in production | Check Cloud Run logs: `gcloud run services logs read doseloop-server --region=us-central1` |
-| CORS errors | Set `CORS_ORIGIN` env var on the server Cloud Run service to the client's Cloud Run URL |
+```
+Internet
+    │
+    ├─ HTTPS ─► Cloud Run: doseloop-client (nginx:alpine, port 80)
+    │           Static SPA — React + Vite
+    │           VITE_API_URL baked in at build time
+    │
+    └─ HTTPS ─► Cloud Run: doseloop-server (node:alpine, port 5000)
+                Express + TypeScript + Prisma
+                Secrets from Secret Manager
+                │
+                ├─► Supabase PostgreSQL (TLS, Transaction Pooler port 6543)
+                ├─► Supabase Auth (JWT validation via service-role key)
+                ├─► Supabase Storage (file storage)
+                ├─► Groq API (AI assistant — llama-3.3-70b-versatile)
+                └─► Resend (transactional email)
+
+Cloud Scheduler ─► POST /api/v1/cron/reminders (*/15 * * * *, CRON_SECRET auth)
+Secret Manager ─► Env vars mounted to doseloop-server at deploy time
+Artifact Registry ─► Container images (server + client)
+Cloud Build ─► Build → Migrate → Push → Deploy pipeline
+```
+
+---
+
+## 9. Outstanding Manual Actions (MUST complete before production launch)
+
+| # | Action | Priority |
+|---|--------|---------|
+| 1 | **Rotate ALL secrets** from committed `.env` (Step 2) | 🔴 CRITICAL |
+| 2 | **Enable RLS** on all PHI tables in Supabase (Step 4.2) | 🔴 CRITICAL |
+| 3 | Configure Supabase Auth redirect URLs (Step 4.1) | 🔴 HIGH |
+| 4 | Create all Secret Manager secrets (Step 3) | 🔴 HIGH |
+| 5 | Configure Cloud Build trigger substitutions (Step 5.2) | 🔴 HIGH |
+| 6 | Update CORS_ORIGIN after first client deploy (Step 5.3) | 🔴 HIGH |
+| 7 | Configure Cloud Scheduler for reminders (Step 6) | 🟡 MEDIUM |
+| 8 | Review Supabase Storage bucket policies (Step 4.3) | 🟡 MEDIUM |
+| 9 | Configure custom domain + SSL cert mapping | 🟡 MEDIUM |

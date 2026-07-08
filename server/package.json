@@ -2,7 +2,10 @@
   "name": "doseloop-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "postinstall": "prisma generate",
     "vercel-build": "npx prisma generate",

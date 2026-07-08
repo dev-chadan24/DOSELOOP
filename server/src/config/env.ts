@@ -1,8 +1,20 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
-import path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// ---------------------------------------------------------------------------
+// Environment loading
+// ---------------------------------------------------------------------------
+// In Docker / Cloud Run, environment variables are injected directly by the
+// platform — no .env file is present, and dotenv.config() will simply find
+// nothing and leave process.env untouched (that is correct behaviour).
+//
+// In local development, dotenv reads from the nearest .env in the working
+// directory (repo root when running `npm run dev` from server/).
+//
+// We intentionally do NOT hardcode a path because __dirname is unreliable
+// after TypeScript compilation (dist/ layout differs from src/ layout).
+// ---------------------------------------------------------------------------
+dotenv.config({ override: false });
 
 // ---------------------------------------------------------------------------
 // Environment schema
@@ -28,7 +40,7 @@ const envSchema = z.object({
     .optional(),
 
   // Auth
-  JWT_SECRET: z.string().min(10, 'JWT_SECRET must be at least 10 characters'),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters for production security'),
   CORS_ORIGIN: z.string().optional(),
 
   // Groq AI — optional so the server boots without a key.
@@ -47,7 +59,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email('RESEND_FROM_EMAIL must be a valid email address').default('emergency@doseloop.com'),
 
-  // Vercel Cron
+  // Cloud Run / Vercel Cron security token
   CRON_SECRET: z.string().optional(),
 });
 
@@ -72,7 +84,7 @@ export const env = parseResult.data;
 if (!env.GROQ_API_KEY) {
   console.warn(
     '⚠️  GROQ_API_KEY is not set. The AI assistant will return a fallback message.\n' +
-      '   → Add your key to server/.env: GROQ_API_KEY=gsk_your_real_key_here\n' +
+      '   → Add your key to .env: GROQ_API_KEY=gsk_your_real_key_here\n' +
       '   → Get a key at: https://console.groq.com/keys',
   );
 }

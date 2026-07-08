@@ -1,6 +1,9 @@
 import { logger } from '../../config/logger';
+import { env } from '../../config/env';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_API_KEY = env.RESEND_API_KEY;
+const RESEND_FROM = env.RESEND_FROM_EMAIL;
+
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   if (!RESEND_API_KEY) {
@@ -16,7 +19,7 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'DoseLoop <notifications@doseloop.app>', // Change domain if needed in real prod
+        from: `DoseLoop <${RESEND_FROM}>`,
         to,
         subject,
         html,

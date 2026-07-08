@@ -1,22 +1,27 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# DoseLoop — Google Cloud Build Pipeline
-# Place: ROOT of the repository (so Cloud Build triggers find it automatically)
+# DoseLoop — Google Cloud Build Pipeline (Production)
+# Location: ROOT of the repository
 #
 # Build flow:
-#   1. Build server image  (from server/Dockerfile)
-#   2. Build client image  (from client/Dockerfile)  — runs in parallel
-#   3. Push both to Artifact Registry
-#   4. Deploy both to Cloud Run
+#   1. Build server image  (from server/Dockerfile) — parallel
+#   2. Build client image  (from client/Dockerfile) — parallel
+#   3. Run prisma migrate deploy (pre-deploy migration step)
+#   4. Push both images to Artifact Registry
+#   5. Deploy both to Cloud Run
 #
-# Cloud Build trigger config:
-#   - Build configuration: Cloud Build configuration file (YAML or JSON)
-#   - Location: Repository  →  / (root)  →  cloudbuild.yaml
+# Prerequisites (one-time setup — see deploy/README-GCP.md):
+#   - GCP project with billing enabled
+#   - Artifact Registry repo: gcloud artifacts repositories create doseloop \
+#       --repository-format=docker --location=us-central1
+#   - Secrets created in Secret Manager (see deploy/README-GCP.md § Step 3)
+#   - Cloud Build SA with roles: run.admin, artifactregistry.writer,
+#     iam.serviceAccountUser, secretmanager.secretAccessor
 #
-# Required substitution variables (set in Cloud Build trigger UI):
-#   _PROJECT_ID          — your GCP project ID
-#   _REGION              — e.g. us-central1
-#   _SERVER_CLOUD_RUN_URL — Cloud Run URL of doseloop-server (after first deploy)
-#   _VITE_SUPABASE_ANON_KEY — Supabase anon key (mark as secret in trigger UI)
+# Required substitutions (set in Cloud Build trigger UI — mark secrets as 🔒):
+#   _PROJECT_ID            — GCP project ID (e.g. doseloop-prod)
+#   _REGION                — Cloud Run region (e.g. us-central1)
+#   _SERVER_CLOUD_RUN_URL  — Cloud Run URL of doseloop-server (set after 1st deploy)
+#   _VITE_SUPABASE_ANON_KEY — Supabase anon key (🔒 mark as secret in trigger UI)
 # ──────────────────────────────────────────────────────────────────────────────
 
 substitutions:
@@ -24,18 +29,19 @@ substitutions:
   _REGION: "us-central1"
   _ARTIFACT_REPO: "doseloop"
 
-  # Image paths in Artifact Registry
+  # Derived image paths in Artifact Registry
   _SERVER_IMAGE: "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_ARTIFACT_REPO}/doseloop-server"
   _CLIENT_IMAGE: "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_ARTIFACT_REPO}/doseloop-client"
 
-  # Runtime URL of the server Cloud Run service (used by Vite at build time)
-  # On first deploy: use placeholder below. After server is live, update to the
-  # real Cloud Run URL and re-trigger the build.
-  _SERVER_CLOUD_RUN_URL: "https://placeholder.run.app"
+  # Cloud Run URL of the server service — used by Vite as VITE_API_URL at build time.
+  # On first deploy: leave as placeholder, then update after server is live.
+  _SERVER_CLOUD_RUN_URL: "https://doseloop-server-REPLACE-ME.a.run.app"
 
-  # Supabase public values (safe to commit)
+  # Supabase public URL (not a secret — safe to commit)
   _VITE_SUPABASE_URL: "https://hvduagntoflynubyaqxs.supabase.co"
+
   # ⚠️  Set VITE_SUPABASE_ANON_KEY in the Cloud Build trigger UI substitutions
+  # (mark it as a secret variable — it will not appear in build logs)
   _VITE_SUPABASE_ANON_KEY: ""
 
 options:
@@ -44,7 +50,6 @@ options:
 
 steps:
   # ── Step 1: Build server image ──────────────────────────────────────────────
-  # Context = server/   |   Dockerfile = server/Dockerfile
   - name: "gcr.io/cloud-builders/docker"
     id: "build-server"
     args:
@@ -54,11 +59,9 @@ steps:
       - "--cache-from=${_SERVER_IMAGE}:latest"
       - "--file=server/Dockerfile"
       - "server"
-    waitFor: ["-"]
+    waitFor: ["-"]  # Start immediately (parallel with build-client)
 
-  # ── Step 2: Build client image (parallel) ───────────────────────────────────
-  # Context = client/   |   Dockerfile = client/Dockerfile
-  # VITE_* vars are baked in at build time by Vite
+  # ── Step 2: Build client image ───────────────────────────────────────────────
   - name: "gcr.io/cloud-builders/docker"
     id: "build-client"
     args:
@@ -71,7 +74,7 @@ steps:
       - "--build-arg=VITE_SUPABASE_URL=${_VITE_SUPABASE_URL}"
       - "--build-arg=VITE_SUPABASE_ANON_KEY=${_VITE_SUPABASE_ANON_KEY}"
       - "client"
-    waitFor: ["-"]
+    waitFor: ["-"]  # Start immediately (parallel with build-server)
 
   # ── Step 3: Push server image ────────────────────────────────────────────────
   - name: "gcr.io/cloud-builders/docker"
@@ -85,7 +88,25 @@ steps:
     args: ["push", "--all-tags", "${_CLIENT_IMAGE}"]
     waitFor: ["build-client"]
 
-  # ── Step 5: Deploy server to Cloud Run ──────────────────────────────────────
+  # ── Step 5: Run Prisma migrations (pre-deploy, against production DB) ────────
+  # This uses the DIRECT_URL (non-pooled) for migrations as required by Prisma.
+  # The DATABASE_URL and DIRECT_URL secrets are mounted from Secret Manager.
+  # If migration fails, the deploy steps below will NOT run (waitFor dependency).
+  - name: "node:22-alpine"
+    id: "prisma-migrate"
+    entrypoint: "sh"
+    args:
+      - "-c"
+      - |
+        apk add --no-cache openssl &&
+        cd server &&
+        npm ci --ignore-scripts &&
+        npx prisma generate &&
+        npx prisma migrate deploy
+    secretEnv: ["DATABASE_URL", "DIRECT_URL"]
+    waitFor: ["push-server"]  # Wait for server push so we know the image is valid
+
+  # ── Step 6: Deploy server to Cloud Run ──────────────────────────────────────
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: "deploy-server"
     entrypoint: gcloud
@@ -102,11 +123,17 @@ steps:
       - "--cpu=1"
       - "--min-instances=0"
       - "--max-instances=10"
-      - "--set-env-vars=NODE_ENV=production,PORT=5000,SUPABASE_URL=https://hvduagntoflynubyaqxs.supabase.co,SUPABASE_SERVICE_ROLE_KEY=${_SUPABASE_SERVICE_ROLE_KEY},JWT_SECRET=${_JWT_SECRET},GROQ_API_KEY=${_GROQ_API_KEY},RESEND_API_KEY=${_RESEND_API_KEY},DATABASE_URL=${_DATABASE_URL},RESEND_FROM_EMAIL=emergency@doseloop.com"
+      - "--concurrency=80"
+      - "--timeout=300"
+      # Non-secret env vars injected as plain env config
+      - "--set-env-vars=NODE_ENV=production,PORT=5000,RESEND_FROM_EMAIL=emergency@doseloop.com"
+      # 🔒 Secrets mounted from Google Secret Manager
+      # Format: ENV_VAR_NAME=secret-name:version
+      - "--set-secrets=DATABASE_URL=doseloop-database-url:latest,DIRECT_URL=doseloop-direct-url:latest,SUPABASE_URL=doseloop-supabase-url:latest,SUPABASE_SERVICE_ROLE_KEY=doseloop-supabase-service-role-key:latest,JWT_SECRET=doseloop-jwt-secret:latest,GROQ_API_KEY=doseloop-groq-api-key:latest,RESEND_API_KEY=doseloop-resend-api-key:latest,CORS_ORIGIN=doseloop-cors-origin:latest,CRON_SECRET=doseloop-cron-secret:latest"
       - "--project=${_PROJECT_ID}"
-    waitFor: ["push-server"]
+    waitFor: ["prisma-migrate"]
 
-  # ── Step 6: Deploy client to Cloud Run ──────────────────────────────────────
+  # ── Step 7: Deploy client to Cloud Run ──────────────────────────────────────
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: "deploy-client"
     entrypoint: gcloud
@@ -123,8 +150,18 @@ steps:
       - "--cpu=1"
       - "--min-instances=0"
       - "--max-instances=10"
+      - "--concurrency=1000"
+      - "--timeout=60"
       - "--project=${_PROJECT_ID}"
-    waitFor: ["push-client"]
+    waitFor: ["push-client"]  # Client deploy is independent of server deploy
+
+availableSecrets:
+  secretManager:
+    # Secrets accessed during the prisma-migrate step
+    - versionName: "projects/${_PROJECT_ID}/secrets/doseloop-database-url/versions/latest"
+      env: "DATABASE_URL"
+    - versionName: "projects/${_PROJECT_ID}/secrets/doseloop-direct-url/versions/latest"
+      env: "DIRECT_URL"
 
 images:
   - "${_SERVER_IMAGE}:$SHORT_SHA"

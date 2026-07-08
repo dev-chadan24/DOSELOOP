@@ -94,18 +94,27 @@ app.use((_req, res, next) => {
 // ---------------------------------------------------------------------------
 app.use(
   cors({
-    // In production on Vercel, the frontend and backend share the same domain,
-    // so CORS is largely handled at the infrastructure level. We allow all origins
-    // here because every endpoint is protected by JWT authentication anyway.
-    // In development we restrict to the local Vite dev server.
-    origin: env.CORS_ORIGIN
-      ? env.CORS_ORIGIN
-      : env.NODE_ENV === 'development'
-        ? 'http://localhost:5173'
-        : true,
+    // Production: CORS_ORIGIN must be set to the exact Cloud Run client URL.
+    // If it is a comma-separated list, split it into an array for multi-origin support.
+    // Development: defaults to the local Vite dev server.
+    // We never use `true` (allow-all) in production — healthcare data must be
+    // accessed only from the known frontend origin.
+    origin: (() => {
+      if (env.CORS_ORIGIN) {
+        const origins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+        return origins.length === 1 ? origins[0] : origins;
+      }
+      if (env.NODE_ENV === 'development') {
+        return 'http://localhost:5173';
+      }
+      // Production with no CORS_ORIGIN set — block all cross-origin requests
+      // rather than allow everything. Set CORS_ORIGIN in Cloud Run env config.
+      return false;
+    })(),
     credentials: true,
   }),
 );
+
 
 // ---------------------------------------------------------------------------
 // Compression & Body Parsing

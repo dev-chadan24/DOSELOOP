@@ -10,3 +10,11 @@ dist/
 .eslintcache
 coverage/
 .nyc_output/
+.git/
+.gitignore
+*.md
+tests/
+test/
+__tests__/
+*.test.ts
+*.spec.ts
