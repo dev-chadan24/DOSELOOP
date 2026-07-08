@@ -25,7 +25,7 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 substitutions:
-  _PROJECT_ID: "doseloop-prod"
+  _PROJECT_ID: "doseloop-prod-501816"
   _REGION: "us-central1"
   _ARTIFACT_REPO: "doseloop"
 
