@@ -203,7 +203,7 @@ function Assistant() {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
           <div className="flex items-center gap-2">
-            <AiBadge label="DoseLoop AI" />
+            <AiBadge label="Pulse AI" />
             <span className="text-xs text-muted-foreground">
               No diagnosis · no prescriptions
             </span>
@@ -229,7 +229,7 @@ function Assistant() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Ask DoseLoop AI anything
+                  Ask Pulse AI anything
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Medications, symptoms, healthy habits, or app features
@@ -253,7 +253,7 @@ function Assistant() {
               >
                 {m.role === "assistant" && (
                   <span className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-primary">
-                    <Sparkles className="size-3" /> DoseLoop AI
+                    <Sparkles className="size-3" /> Pulse AI
                   </span>
                 )}
                 {m.role === "assistant" ? (
@@ -329,7 +329,7 @@ function Assistant() {
 
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <ShieldAlert className="size-4 shrink-0 text-muted-foreground" />
-        DoseLoop AI provides health information, not medical advice. In an emergency, contact your local emergency services immediately.
+        Pulse AI provides health information, not medical advice. In an emergency, contact your local emergency services immediately.
       </p>
     </div>
   );
