@@ -20,7 +20,7 @@
 # ──────────────────────────────────────────────────────────────────────────────
 
 substitutions:
-  _PROJECT_ID: "your-gcp-project-id"
+  _PROJECT_ID: "doseloop-501811"
   _REGION: "us-central1"
   _ARTIFACT_REPO: "doseloop"
 
