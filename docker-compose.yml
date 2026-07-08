@@ -1,0 +1,58 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# DoseLoop — Docker Compose
+# Use this to run the full stack locally with Docker BEFORE pushing to GCP.
+#
+# Usage:
+#   docker-compose up --build
+#
+# The client is served at http://localhost:80
+# The API is served at http://localhost:5000
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ─── Backend API (Express + Prisma) ────────────────────────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: doseloop-server
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    # Load all env vars from the root .env file
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ─── Frontend (React + Vite → Nginx) ───────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        # In local Docker testing the server is reachable on the host machine.
+        # Change this to your Cloud Run server URL when deploying to GCP.
+        VITE_API_URL: http://localhost:5000/api/v1
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    container_name: doseloop-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
