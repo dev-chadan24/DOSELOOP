@@ -35,14 +35,14 @@ substitutions:
 
   # Cloud Run URL of the server service — used by Vite as VITE_API_URL at build time.
   # On first deploy: leave as placeholder, then update after server is live.
-  _SERVER_CLOUD_RUN_URL: "https://doseloop-server-REPLACE-ME.a.run.app"
+  _SERVER_CLOUD_RUN_URL: "https://doseloop-server-m4wtbsnmdq-uc.a.run.app"
 
   # Supabase public URL (not a secret — safe to commit)
   _VITE_SUPABASE_URL: "https://hvduagntoflynubyaqxs.supabase.co"
 
   # ⚠️  Set VITE_SUPABASE_ANON_KEY in the Cloud Build trigger UI substitutions
   # (mark it as a secret variable — it will not appear in build logs)
-  _VITE_SUPABASE_ANON_KEY: ""
+  _VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2ZHVhZ250b2ZseW51YnlhcXhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4OTk0MTgsImV4cCI6MjA5ODQ3NTQxOH0.jMPTfGx2j1g-GzHcDM9iv_qx65Ko2OA9gylB382VKV4"
 
 options:
   logging: CLOUD_LOGGING_ONLY

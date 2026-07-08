@@ -1,0 +1,38 @@
+# .gcloudignore — controls what gets uploaded to Cloud Build
+# Syntax is identical to .gitignore
+
+# Dependencies — Cloud Build installs these fresh inside the container
+node_modules/
+**/node_modules/
+
+# Local env files — secrets come from Secret Manager in production
+.env
+.env.local
+.env.*.local
+
+# Build outputs — Cloud Build produces these fresh
+dist/
+**/dist/
+build/
+**/build/
+
+# Git internals
+.git/
+.gitignore
+
+# IDE and OS files
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Prisma generated client (regenerated in Docker build)
+server/node_modules/
+
+# Test artifacts
+coverage/
+**/coverage/
