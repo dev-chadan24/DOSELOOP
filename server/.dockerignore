@@ -5,11 +5,8 @@ dist/
 .env.*
 .env.local
 .env.production
-src/
+# NOTE: src/ must NOT be excluded — TypeScript needs it to compile
 *.log
-*.md
-.prettierrc
-eslint.config.mjs
 .eslintcache
 coverage/
 .nyc_output/
