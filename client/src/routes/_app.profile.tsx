@@ -80,6 +80,7 @@ function Profile() {
               <span className="absolute -bottom-1 -right-1 size-6 rounded-full border-4 border-card bg-success" />
             </div>
             <Button className="rounded-xl shadow-soft transition-all duration-250 hover:-translate-y-0.5 hover:shadow-lift">
+              {/* TODO(analytics): When profile edit mutation is implemented, add trackEvent("profile_updated") in its onSuccess callback. */}
               <Pencil className="size-4" /> Edit profile
             </Button>
           </div>

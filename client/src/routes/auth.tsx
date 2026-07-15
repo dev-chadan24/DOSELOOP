@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { API_BASE } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -87,6 +88,7 @@ function Auth() {
         // Sync is now automatically handled by AuthProvider's onAuthStateChange
         navigate({ to: "/dashboard" });
       } else if (isSignUp) {
+        trackEvent("signup_success");
         setErrorMsg("Please check your email to confirm registration.");
       }
     } catch (err: unknown) {

@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetcher, updater } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_app/medications")({
   head: () => ({ meta: [{ title: "Medications — DoseLoop" }] }),
@@ -88,6 +89,7 @@ function Medications() {
                 >
                   <Pill className="size-6" />
                 </span>
+                {/* TODO(analytics): When medication edit/delete mutations are implemented, add trackEvent("medication_updated") and trackEvent("medication_deleted") in their onSuccess callbacks. */}
                 <Button variant="ghost" size="icon" aria-label={`Edit ${med.name}`}>
                   <Pencil className="size-4" />
                 </Button>
@@ -159,6 +161,8 @@ function AddMedicationDialog({ onClose }: { onClose: () => void }) {
       times: string[];
     }) => updater("/medications", data, "POST"),
     onSuccess: () => {
+      trackEvent("medication_created");
+      // TODO(analytics): If reminders become independently created (separate from medications), add trackEvent("reminder_created") to that flow.
       queryClient.invalidateQueries({ queryKey: ["/medications"] });
       queryClient.invalidateQueries({ queryKey: ["/dashboard/summary"] });
       onClose();

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetcher, updater } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 
 export interface ChatMessage {
   id: string;
@@ -145,6 +146,11 @@ function Assistant() {
     }
   }, [history, messages.length]);
 
+  // Track chat start
+  useEffect(() => {
+    trackEvent("ai_chat_started");
+  }, []);
+
   // Auto-scroll to bottom whenever a new message arrives
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -183,6 +189,7 @@ function Assistant() {
       { id: crypto.randomUUID(), role: "user", content: value },
     ]);
     setInput("");
+    trackEvent("ai_message_sent");
     aiMutation.mutate(value);
   };
 

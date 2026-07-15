@@ -39,6 +39,7 @@ export interface FamilyPulse {
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetcher, updater } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Today — DoseLoop" }] }),
@@ -114,7 +115,10 @@ function Dashboard() {
     onError: (err, newTodo, context) => {
       queryClient.setQueryData(["/doses/today"], context?.previousDoses);
     },
-    onSettled: () => {
+    onSettled: (data, error, variables) => {
+      if (!error && variables.status === "taken") {
+        trackEvent("reminder_completed");
+      }
       queryClient.invalidateQueries({ queryKey: ["/doses/today"] });
       queryClient.invalidateQueries({ queryKey: ["/dashboard/summary"] });
     },

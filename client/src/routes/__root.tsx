@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -11,6 +12,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "../components/theme/ThemeProvider";
 import { ScrollReveal } from "../hooks/use-scroll-reveal";
 import { AuthProvider } from "../AuthProvider";
+import { initAnalytics, trackPageView } from "../lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -80,6 +82,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location.pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>

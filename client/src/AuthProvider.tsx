@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
 import { API_BASE } from "./lib/api";
+import { trackEvent } from "./lib/analytics";
 
 interface AuthContextType {
   session: Session | null;
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       setIsLoading(false);
       if (event === "SIGNED_IN") {
+        trackEvent("login_success");
         syncUser(session);
       }
     });
@@ -61,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    trackEvent("logout");
     await supabase.auth.signOut();
   };
 
